@@ -1,0 +1,25 @@
+@use '../../app';
+
+#container {
+  width: 80vw;
+  margin: 0 auto;
+  position: relative;
+
+  header {
+    position: sticky;
+    top: 0;
+    width: 100%;
+
+    ul {
+      display: flex;
+      justify-content: center;
+
+      height: app.$header-height;
+
+      z-index: 10;
+    }
+  }
+
+  main {
+  }
+}
