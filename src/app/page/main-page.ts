@@ -10,7 +10,7 @@ import {DataType} from "../input-form/data1";
 
 @Component({
   template: `
-    <app-list [receivedData$]="books" [columns]="showData"></app-list>
+    <app-list [receivedData$]="books" [columns]="showData" [controls]="true"></app-list>
   `,
   encapsulation: ViewEncapsulation.None,
   changeDetection: ChangeDetectionStrategy.OnPush

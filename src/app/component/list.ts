@@ -22,19 +22,37 @@ import {MatTableModule} from "@angular/material/table";
       데이터가 없습니다.
     </ng-template>
 
-    <ng-container *ngIf="receivedData$ | async; else empty;">
-      <table mat-table [dataSource]="data" class="mat-elevation-z8">
-        <ng-container [matColumnDef]="column" *ngFor="let column of columns">
-          <th mat-header-cell *matHeaderCellDef [innerHTML]="column"></th>
-          <td mat-cell *matCellDef="let element">{{element[column]}}</td>
-        </ng-container>
-        <tr mat-header-row *matHeaderRowDef="columns"></tr>
-        <tr mat-row *matRowDef="let row; columns: columns;"></tr>
-      </table>
-<!--      <ng-container *ngFor="let _data of data;">-->
-<!--        <div [innerHTML]="_data['id'] | json"></div>-->
-<!--        <ng-container *ngTemplateOutlet="_update; context: {value: _data}"></ng-container>-->
-<!--      </ng-container>-->
+    <ng-template #loading>
+      데이터를 로딩중입니다.
+    </ng-template>
+
+    <ng-container *ngIf="receivedData$ | async; else loading; let values">
+      <ng-container *ngIf="values.length < 1; else show">
+        <ng-container *ngTemplateOutlet="empty"></ng-container>
+      </ng-container>
+      <ng-template #show>
+        <table>
+          <thead>
+          <th *ngFor="let column of columns" [innerHTML]="column"></th>
+          </thead>
+          <tbody>
+          <tr *ngFor="let _data of data">
+            <td *ngFor="let column of columns">
+              <ng-container *ngIf="column!='controls'; else _controls_">
+                <span [innerHTML]="_data[column]"></span>
+              </ng-container>
+              <ng-template #_controls_>
+                <ng-container *ngTemplateOutlet="_update; context: {value: _data}"></ng-container>
+              </ng-template>
+            </td>
+          </tr>
+          </tbody>
+        </table>
+      </ng-template>
+      <!--      <ng-container *ngFor="let _data of data;">-->
+      <!--        <div [innerHTML]="_data['id'] | json"></div>-->
+      <!--        <ng-container *ngTemplateOutlet="_update; context: {value: _data}"></ng-container>-->
+      <!--      </ng-container>-->
     </ng-container>
 
     <ng-container *ngTemplateOutlet="_create"></ng-container>
@@ -45,7 +63,9 @@ import {MatTableModule} from "@angular/material/table";
 export class ListComponent implements OnInit {
   @Input() receivedData$!: BehaviorSubject<any>;
   @Input() columns!: string[];
+  @Input() controls!: boolean;
   data: any[] = [];
+  _controls = 'controls';
 
   constructor(
     private _dialog: DialogService,
@@ -58,6 +78,12 @@ export class ListComponent implements OnInit {
     this.receivedData$.subscribe(data => {
       this.data = data;
     });
+
+    if (this.controls) {
+      this.columns.push('controls');
+    }
+
+    console.log(this.receivedData$);
   }
 
   create() {
@@ -65,6 +91,7 @@ export class ListComponent implements OnInit {
   }
 
   update(data: object) {
+    console.log(data);
     this._dialog.update({form: this._inputForm, target: data});
   }
 }
