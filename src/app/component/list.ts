@@ -1,4 +1,4 @@
-import {ChangeDetectionStrategy, Component, Input, NgModule, OnInit, ViewEncapsulation} from "@angular/core";
+import {ChangeDetectionStrategy, Component, Injector, Input, NgModule, OnInit, ViewEncapsulation} from "@angular/core";
 import {BehaviorSubject} from "rxjs";
 import {CommonModule} from "@angular/common";
 import {DialogFormModule} from "./dialog-form";
@@ -6,84 +6,86 @@ import {DialogService} from "../service/dialog.service";
 import {DataType} from "../input-form/data1";
 import {MatListModule} from "@angular/material/list";
 import {MatTableModule} from "@angular/material/table";
+import {ActivatedRoute} from "@angular/router";
+import {MatButtonModule} from "@angular/material/button";
+import {PaginationComponent} from "./pagination-component";
 
 @Component({
   selector: 'app-list',
   template: `
     <ng-template #_create>
-      <button (click)="create()">Create</button>
+      <button mat-button (click)="create()">Create</button>
     </ng-template>
 
     <ng-template #_update let-value="value">
-      <button (click)="update(value)">Update</button>
+      <button mat-button (click)="update(value)">Update</button>
     </ng-template>
 
     <ng-template #empty>
       데이터가 없습니다.
     </ng-template>
 
-    <ng-template #loading>
-      데이터를 로딩중입니다.
+    <ng-template #_listTable>
+      <table mat-table [dataSource]="listData" class="mat-elevation-z8">
+        <ng-container [matColumnDef]="column" *ngFor="let column of columns">
+          <ng-container *ngIf="column !== 'controls' then _data_ else _controls_"></ng-container>
+          <ng-template #_data_>
+            <th mat-header-cell *matHeaderCellDef [innerHTML]="column"></th>
+            <td mat-cell *matCellDef="let element">{{element[column]}}</td>
+          </ng-template>
+          <ng-template #_controls_>
+            <th mat-header-cell *matHeaderCellDef>controls</th>
+            <td mat-cell *matCellDef="let row">
+              <ng-container *ngTemplateOutlet="_update; context: {value: row}"></ng-container>
+            </td>
+          </ng-template>
+        </ng-container>
+        <tr mat-header-row *matHeaderRowDef="columns"></tr>
+        <tr mat-row *matRowDef="let row; columns: columns;"></tr>
+        <!--      <ng-container *ngIf="controls then _controls"></ng-container>-->
+        <!--      <ng-template #_controls>-->
+        <!--        <tr mat-header-row></tr>-->
+        <!--        <tr mat-row *matRowDef="let row;">-->
+        <!--          <ng-container *ngTemplateOutlet="_update; context: {value: row}"></ng-container>-->
+        <!--        </tr>-->
+        <!--      </ng-template>-->
+      </table>
     </ng-template>
 
-    <ng-container *ngIf="receivedData$ | async; else loading; let values">
-      <ng-container *ngIf="values.length < 1; else show">
-        <ng-container *ngTemplateOutlet="empty"></ng-container>
-      </ng-container>
-      <ng-template #show>
-        <table>
-          <thead>
-          <th *ngFor="let column of columns" [innerHTML]="column"></th>
-          </thead>
-          <tbody>
-          <tr *ngFor="let _data of data">
-            <td *ngFor="let column of columns">
-              <ng-container *ngIf="column!='controls'; else _controls_">
-                <span [innerHTML]="_data[column]"></span>
-              </ng-container>
-              <ng-template #_controls_>
-                <ng-container *ngTemplateOutlet="_update; context: {value: _data}"></ng-container>
-              </ng-template>
-            </td>
-          </tr>
-          </tbody>
-        </table>
-      </ng-template>
-      <!--      <ng-container *ngFor="let _data of data;">-->
-      <!--        <div [innerHTML]="_data['id'] | json"></div>-->
-      <!--        <ng-container *ngTemplateOutlet="_update; context: {value: _data}"></ng-container>-->
-      <!--      </ng-container>-->
-    </ng-container>
-
-    <ng-container *ngTemplateOutlet="_create"></ng-container>
+    <div class="list-header">
+      <h1 [innerHTML]="title"></h1>
+    </div>
+    <div class="list-main">
+      <ng-container *ngIf="listData.length > 0; then _listTable else empty"></ng-container>
+    </div>
+    <div class="list-footer">
+      <ng-container *ngTemplateOutlet="_create"></ng-container>
+      <ng-template #paging></ng-template>
+    </div>
   `,
   encapsulation: ViewEncapsulation.None,
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  styleUrls: ['./list.scss'],
 })
-export class ListComponent implements OnInit {
-  @Input() receivedData$!: BehaviorSubject<any>;
+export class ListComponent extends PaginationComponent implements OnInit {
+  @Input() title!: string;
   @Input() columns!: string[];
   @Input() controls!: boolean;
-  data: any[] = [];
-  _controls = 'controls';
+
 
   constructor(
     private _dialog: DialogService,
-    private _inputForm: DataType
+    private _inputForm: DataType,
+    _route: ActivatedRoute
   ) {
-    console.log(_inputForm);
+    super(_route);
   }
 
   ngOnInit() {
-    this.receivedData$.subscribe(data => {
-      this.data = data;
-    });
 
-    if (this.controls) {
+    if(this.controls) {
       this.columns.push('controls');
     }
-
-    console.log(this.receivedData$);
   }
 
   create() {
@@ -91,9 +93,9 @@ export class ListComponent implements OnInit {
   }
 
   update(data: object) {
-    console.log(data);
     this._dialog.update({form: this._inputForm, target: data});
   }
+
 }
 
 
@@ -103,12 +105,13 @@ export class ListComponent implements OnInit {
     CommonModule,
     DialogFormModule,
     MatListModule,
-    MatTableModule
+    MatTableModule,
+    MatButtonModule
   ],
   exports: [ListComponent],
   providers: [
     DialogService,
-    DataType
+    DataType,
   ]
 })
 export class ListModule {

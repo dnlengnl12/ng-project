@@ -6,8 +6,8 @@ import {CommonModule} from "@angular/common";
   template: `
     <ng-template #nav>
       <ul>
-        <li><a href="./main">Home</a></li>
-        <li><a href="./book">Books</a></li>
+        <li><a routerLink="./main">Home</a></li>
+        <li><a routerLink="./book">Books</a></li>
       </ul>
     </ng-template>
     <div id="container">

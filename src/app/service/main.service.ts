@@ -21,18 +21,18 @@ export class MainService implements OnInit {
   constructor(
     private http: HttpClient
   ) {
-    console.log('main service loaded');
   }
 
   ngOnInit() {
 
   }
 
-  getData(): Observable<any> {
-    return this.http.get(this.apiUrl)
+  get(startIndex?:number, pageSize?:number): Observable<any> {
+    const _url = startIndex ? `${this.apiUrl}?page=${startIndex}&size=${pageSize}` : this.apiUrl;
+
+    return this.http.get(_url)
       .pipe(
         tap(_ => console.log('fetched'))
       )
   }
-
 }

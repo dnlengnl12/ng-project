@@ -7,17 +7,18 @@ import {CommonModule} from "@angular/common";
 import {DialogFormModule} from "../component/dialog-form";
 import {DialogService} from "../service/dialog.service";
 import {DataType} from "../input-form/data1";
+import {ListResolve} from "../resolve/list-resolve.resolver";
 
 @Component({
   template: `
-    <app-list [receivedData$]="books" [columns]="showData" [controls]="true"></app-list>
+    <app-list [columns]="columns" [controls]="true"></app-list>
   `,
   encapsulation: ViewEncapsulation.None,
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class MainPageComponent implements OnInit {
   books = new BehaviorSubject<any>(null);
-  showData = ['name', 'approval'];
+  columns = ['name', 'approval'];
 
   constructor(
     private _mainService: MainService
@@ -25,10 +26,6 @@ export class MainPageComponent implements OnInit {
   }
 
   ngOnInit() {
-    this._mainService.getData()
-      .subscribe(data => {
-        this.books.next(data);
-      });
   }
 }
 
@@ -40,7 +37,10 @@ export class MainPageComponent implements OnInit {
       {
         path: '',
         pathMatch: 'full',
-        component: MainPageComponent
+        component: MainPageComponent,
+        resolve: {
+          listData: ListResolve
+        }
       }
     ]),
     CommonModule
