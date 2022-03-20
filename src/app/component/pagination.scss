@@ -1,0 +1,21 @@
+@use '../../app';
+ul {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  li {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-width: 40px;
+    min-height: 40px;
+    border: 1px solid app.$text;
+    cursor: pointer;
+  }
+
+  li._active {
+    background-color: app.$text;
+    color: app.$field
+  }
+}

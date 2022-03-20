@@ -1,5 +1,14 @@
-import {ChangeDetectionStrategy, Component, Injector, Input, NgModule, OnInit, ViewEncapsulation} from "@angular/core";
-import {BehaviorSubject} from "rxjs";
+import {
+  AfterContentInit,
+  ChangeDetectionStrategy,
+  Component,
+  ContentChild,
+  Injector,
+  Input,
+  NgModule, OnChanges,
+  OnInit, SimpleChanges,
+  ViewEncapsulation
+} from "@angular/core";
 import {CommonModule} from "@angular/common";
 import {DialogFormModule} from "./dialog-form";
 import {DialogService} from "../service/dialog.service";
@@ -8,7 +17,8 @@ import {MatListModule} from "@angular/material/list";
 import {MatTableModule} from "@angular/material/table";
 import {ActivatedRoute} from "@angular/router";
 import {MatButtonModule} from "@angular/material/button";
-import {PaginationComponent} from "./pagination-component";
+import {PaginationModule} from "./pagination";
+import {PaginationBase} from "./pagination-base";
 
 @Component({
   selector: 'app-list',
@@ -23,6 +33,16 @@ import {PaginationComponent} from "./pagination-component";
 
     <ng-template #empty>
       데이터가 없습니다.
+    </ng-template>
+
+    <ng-template #_paging>
+      <app-paging [nowPage]="nowPage"
+                  [pageCount]="pageCount"
+                  [startPage]="startPage"
+                  [endPage]="endPage"
+                  [totalPage]="totalPage"
+                  [pageGroup]="pageGroup"
+      ></app-paging>
     </ng-template>
 
     <ng-template #_listTable>
@@ -59,32 +79,60 @@ import {PaginationComponent} from "./pagination-component";
       <ng-container *ngIf="listData.length > 0; then _listTable else empty"></ng-container>
     </div>
     <div class="list-footer">
+      <ng-container *ngIf="paging">
+        <ng-container *ngTemplateOutlet="_paging"></ng-container>
+      </ng-container>
       <ng-container *ngTemplateOutlet="_create"></ng-container>
-      <ng-template #paging></ng-template>
     </div>
   `,
   encapsulation: ViewEncapsulation.None,
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrls: ['./list.scss'],
+  providers: [PaginationBase]
 })
-export class ListComponent extends PaginationComponent implements OnInit {
+export class ListComponent implements OnInit {
+  listData!: [];
+  pagedData!: [];
   @Input() title!: string;
   @Input() columns!: string[];
   @Input() controls!: boolean;
+  @Input() paging!: boolean;
 
+  nowPage!: number;
+  pageCount!: number;
+  startPage!: number;
+  endPage!: number;
+  totalPage!: number;
+  pageGroup!: number;
 
   constructor(
     private _dialog: DialogService,
     private _inputForm: DataType,
-    _route: ActivatedRoute
+    private _route: ActivatedRoute,
+    private _page: PaginationBase
   ) {
-    super(_route);
   }
 
   ngOnInit() {
+    this.listData = this._route.snapshot.data['listData'];
 
     if(this.controls) {
       this.columns.push('controls');
+    }
+
+    if(this.paging) {
+      const {_page} = this;
+      _page.listData = this.listData;
+      _page.setPaging();
+      // @ts-ignore
+      this.listData = _page.initData();
+
+      this.nowPage = _page.nowPage;
+      this.pageCount = _page.pageCount;
+      this.startPage = _page.startPage;
+      this.endPage = _page.endPage;
+      this.totalPage = _page.totalPage;
+      this.pageGroup = _page.pageGroup;
     }
   }
 
@@ -94,6 +142,10 @@ export class ListComponent extends PaginationComponent implements OnInit {
 
   update(data: object) {
     this._dialog.update({form: this._inputForm, target: data});
+  }
+
+  getData(event?: any) {
+    this.pagedData = event;
   }
 
 }
@@ -106,7 +158,8 @@ export class ListComponent extends PaginationComponent implements OnInit {
     DialogFormModule,
     MatListModule,
     MatTableModule,
-    MatButtonModule
+    MatButtonModule,
+    PaginationModule
   ],
   exports: [ListComponent],
   providers: [
