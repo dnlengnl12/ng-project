@@ -19,6 +19,7 @@ import {ActivatedRoute} from "@angular/router";
 import {MatButtonModule} from "@angular/material/button";
 import {PaginationModule} from "./pagination";
 import {PaginationBase} from "./pagination-base";
+import {BehaviorSubject} from "rxjs";
 
 @Component({
   selector: 'app-list',
@@ -36,12 +37,12 @@ import {PaginationBase} from "./pagination-base";
     </ng-template>
 
     <ng-template #_paging>
-      <app-paging [nowPage]="nowPage"
-                  [pageCount]="pageCount"
-                  [startPage]="startPage"
-                  [endPage]="endPage"
-                  [totalPage]="totalPage"
-                  [pageGroup]="pageGroup"
+      <app-paging [nowPage]="nowPage.value"
+                  [pageCount]="pageCount.value"
+                  [startPage]="startPage.value"
+                  [endPage]="endPage.value"
+                  [totalPage]="totalPage.value"
+                  [pageGroup]="pageGroup.value"
       ></app-paging>
     </ng-template>
 
@@ -76,13 +77,15 @@ import {PaginationBase} from "./pagination-base";
       <h1 [innerHTML]="title"></h1>
     </div>
     <div class="list-main">
-      <ng-container *ngIf="listData.length > 0; then _listTable else empty"></ng-container>
+      <ng-container *ngIf="listData.value.length > 0; then _listTable else empty"></ng-container>
     </div>
     <div class="list-footer">
       <ng-container *ngIf="paging">
         <ng-container *ngTemplateOutlet="_paging"></ng-container>
       </ng-container>
       <ng-container *ngTemplateOutlet="_create"></ng-container>
+
+      {{nowPage.value | json}}
     </div>
   `,
   encapsulation: ViewEncapsulation.None,
@@ -91,19 +94,19 @@ import {PaginationBase} from "./pagination-base";
   providers: [PaginationBase]
 })
 export class ListComponent implements OnInit {
-  listData!: [];
+  listData!: BehaviorSubject<any>;
   pagedData!: [];
   @Input() title!: string;
   @Input() columns!: string[];
   @Input() controls!: boolean;
   @Input() paging!: boolean;
 
-  nowPage!: number;
-  pageCount!: number;
-  startPage!: number;
-  endPage!: number;
-  totalPage!: number;
-  pageGroup!: number;
+  nowPage = new BehaviorSubject<number>(0);
+  pageCount = new BehaviorSubject<number>(0);
+  startPage = new BehaviorSubject<number>(0);
+  endPage = new BehaviorSubject<number>(0);
+  totalPage = new BehaviorSubject<number>(0);
+  pageGroup = new BehaviorSubject<number>(0);
 
   constructor(
     private _dialog: DialogService,
@@ -114,7 +117,6 @@ export class ListComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.listData = this._route.snapshot.data['listData'];
 
     if(this.controls) {
       this.columns.push('controls');
@@ -122,17 +124,20 @@ export class ListComponent implements OnInit {
 
     if(this.paging) {
       const {_page} = this;
-      _page.listData = this.listData;
+      this._page.listData = this._route.snapshot.data['listData'];
       _page.setPaging();
-      // @ts-ignore
-      this.listData = _page.initData();
 
-      this.nowPage = _page.nowPage;
-      this.pageCount = _page.pageCount;
-      this.startPage = _page.startPage;
-      this.endPage = _page.endPage;
-      this.totalPage = _page.totalPage;
-      this.pageGroup = _page.pageGroup;
+      this._page.setCurrentData();
+      this.listData = this._page.currentData;
+
+      // @ts-ignore
+
+      this.nowPage.next(_page.nowPage);
+      this.pageCount.next(_page.pageCount);
+      this.startPage.next(_page.startPage);
+      this.endPage.next(_page.endPage);
+      this.totalPage.next(_page.totalPage);
+      this.pageGroup.next(_page.pageGroup);
     }
   }
 
