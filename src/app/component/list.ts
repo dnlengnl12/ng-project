@@ -37,12 +37,12 @@ import {BehaviorSubject} from "rxjs";
     </ng-template>
 
     <ng-template #_paging>
-      <app-paging [nowPage]="nowPage.value"
-                  [pageCount]="pageCount.value"
-                  [startPage]="startPage.value"
-                  [endPage]="endPage.value"
-                  [totalPage]="totalPage.value"
-                  [pageGroup]="pageGroup.value"
+      <app-paging [nowPage]="nowPage"
+                  [pageCount]="pageCount"
+                  [startPage]="startPage"
+                  [endPage]="endPage"
+                  [totalPage]="totalPage"
+                  [pageGroup]="pageGroup"
       ></app-paging>
     </ng-template>
 
@@ -85,7 +85,7 @@ import {BehaviorSubject} from "rxjs";
       </ng-container>
       <ng-container *ngTemplateOutlet="_create"></ng-container>
 
-      {{nowPage.value | json}}
+      {{nowPage | json}}
     </div>
   `,
   encapsulation: ViewEncapsulation.None,
@@ -101,12 +101,12 @@ export class ListComponent implements OnInit {
   @Input() controls!: boolean;
   @Input() paging!: boolean;
 
-  nowPage = new BehaviorSubject<number>(0);
-  pageCount = new BehaviorSubject<number>(0);
-  startPage = new BehaviorSubject<number>(0);
-  endPage = new BehaviorSubject<number>(0);
-  totalPage = new BehaviorSubject<number>(0);
-  pageGroup = new BehaviorSubject<number>(0);
+  nowPage!: BehaviorSubject<number>;
+  pageCount!: number;
+  startPage!: BehaviorSubject<number>;
+  endPage!: BehaviorSubject<number>;
+  totalPage!: number;
+  pageGroup!: BehaviorSubject<number>;
 
   constructor(
     private _dialog: DialogService,
@@ -132,12 +132,12 @@ export class ListComponent implements OnInit {
 
       // @ts-ignore
 
-      this.nowPage.next(_page.nowPage);
-      this.pageCount.next(_page.pageCount);
-      this.startPage.next(_page.startPage);
-      this.endPage.next(_page.endPage);
-      this.totalPage.next(_page.totalPage);
-      this.pageGroup.next(_page.pageGroup);
+      this.nowPage = _page.nowPage;
+      this.pageCount = _page.pageCount;
+      this.startPage = _page.startPage;
+      this.endPage = _page.endPage;
+      this.totalPage = _page.totalPage;
+      this.pageGroup = _page.pageGroup;
     }
   }
 

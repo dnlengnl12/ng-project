@@ -21,10 +21,10 @@ export class PaginationBase {
   nowPage = new BehaviorSubject<number>(0);
   dataPerPage!: number;
   totalPage!: number;
-  startPage!: number;
-  endPage!: number;
+  startPage = new BehaviorSubject<number>(0);
+  endPage = new BehaviorSubject<number>(0);
   pageCount = 3;
-  pageGroup!: number;
+  pageGroup = new BehaviorSubject<number>(0);
 
 
   constructor() {
@@ -47,15 +47,15 @@ export class PaginationBase {
     }
 
 
-    this.pageGroup = Math.ceil(this.nowPage.value / this.pageCount);
-    this.endPage = this.setEndPage(this.pageGroup, this.pageCount);
+    this.pageGroup.next(Math.ceil(this.nowPage.value / this.pageCount));
+    this.endPage.next(this.setEndPage(this.pageGroup.value, this.pageCount));
+    this.startPage.next(this.setStartPage(this.endPage.value, this.pageCount));
 
-    if(this.endPage > this.totalPage) {
-      this.endPage = this.totalPage;
+    if(this.endPage.value > this.totalPage) {
+      this.endPage.next(this.totalPage);
     }
 
-    this.startPage = this.setStartPage(this.endPage, this.pageCount);
-    console.log(this.dataPerPage, this.totalPage, this.nowPage.value, this.endPage, this.startPage);
+    console.log(this.dataPerPage, this.totalPage, this.nowPage.value, this.endPage.value, this.startPage.value);
     this.setCurrentData(this.nowPage.value);
 
   }
@@ -65,6 +65,7 @@ export class PaginationBase {
   }
 
   setStartPage(last: number, pageCount: number): number {
+    console.log(last, pageCount);
     return last - (pageCount - 1);
   }
 

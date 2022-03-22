@@ -13,13 +13,14 @@ import {
   SimpleChanges
 } from "@angular/core";
 import {PaginationBase} from "./pagination-base";
+import {BehaviorSubject} from "rxjs";
 
 @Component({
   selector: 'app-paging',
   template: `
     <ul>
-      <ng-container *ngIf="pageGroup > 1">
-        <li>이전</li>
+      <ng-container *ngIf="pageGroup.value > 1">
+        <li (click)="movePage(startPage.value - 1)">이전</li>
       </ng-container>
       <li *ngFor="let _range of range;"
           [className]="'page-'+_range"
@@ -27,25 +28,26 @@ import {PaginationBase} from "./pagination-base";
           (click)="movePage(_range)"
       >
       </li>
-      <ng-container *ngIf="endPage < totalPage">
-        <li (click)="movePage(endPage + 1)">다음</li>
+      <ng-container *ngIf="endPage.value < totalPage">
+        <li (click)="movePage(endPage.value + 1)">다음</li>
       </ng-container>
     </ul>
   `,
   styleUrls: ['./pagination.scss']
 })
-export class PaginationComponent implements OnInit, AfterViewInit {
+export class PaginationComponent implements OnInit, AfterViewInit, OnChanges {
   range!: number[];
-  @Input() nowPage!: number;
+  @Input() nowPage!: BehaviorSubject<number>;
   @Input() pageCount!: number;
-  @Input() startPage!: number;
-  @Input() endPage!: number;
+  @Input() startPage!: BehaviorSubject<number>;
+  @Input() endPage!: BehaviorSubject<number>;
   @Input() totalPage!: number;
-  @Input() pageGroup!: number;
+  @Input() pageGroup!: BehaviorSubject<number>;
 
   liClass!: NodeListOf<Element>;
 
   activeElement!: Element;
+  _pageGroup!: number;
 
   @Output('dataChange') dataChange = new EventEmitter<any>();
   constructor(private _page: PaginationBase) {
@@ -59,16 +61,30 @@ export class PaginationComponent implements OnInit, AfterViewInit {
     this.setRange();
   }
 
+  ngOnChanges(changes: SimpleChanges) {
+    console.log(changes);
+  }
+
   setRange() {
+    const {startPage, endPage} = this;
+
+    const arrayNum = Math.ceil(this.totalPage / this.pageCount) === this.pageGroup.value ?
+                        endPage.value - startPage.value + 1: this.pageCount;
     // @ts-ignore
-    this.range = Array(this.pageCount).fill().map((v, i) => {
-      if (this.startPage < this.endPage) {
-        return this.startPage + i
+    this.range = Array(arrayNum).fill().map((v, i) => {
+      if (startPage.value < endPage.value) {
+        return startPage.value + i
       }
     });
+    console.log(this.range);
+    //this.movePage(this.endPage + 1);
   }
 
   movePage(num: number) {
+    if(this.nowPage.value === num) {
+      return;
+    }
+    const {_page} = this;
     const urlParams = new URLSearchParams(window.location.search);
     const {location} = window;
     urlParams.set('page', ''+num);
@@ -77,14 +93,17 @@ export class PaginationComponent implements OnInit, AfterViewInit {
     const _url = location.origin + location.pathname + '?' + newParam;
     // @ts-ignore
     history.pushState(null, null, _url);
-    this._page.setCurrentData(num);
-    // window.open(location.pathname + '?' + newParam, '_self');
+
+    _page.setCurrentData(num);
     this.setActiveButton(num);
-    this._page.setPaging();
-    console.log(this.nowPage);
-    if(num) {
+    _page.setPaging();
+
+    if(this._pageGroup && this._pageGroup !== this.pageGroup.value) {
       this.setRange();
     }
+
+    this._pageGroup = this.pageGroup.value;
+
   }
 
   setActiveButton(page?: number) {
@@ -95,7 +114,8 @@ export class PaginationComponent implements OnInit, AfterViewInit {
       this.activeElement.classList.remove('_active');
     }
 
-    page = (page) ? page : this.nowPage;
+    page = (page) ? page : this.nowPage.value;
+
 
     this.liClass.forEach(node => {
       // @ts-ignore
