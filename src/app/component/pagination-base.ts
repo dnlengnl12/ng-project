@@ -55,7 +55,6 @@ export class PaginationBase {
       this.endPage.next(this.totalPage);
     }
 
-    console.log(this.dataPerPage, this.totalPage, this.nowPage.value, this.endPage.value, this.startPage.value);
     this.setCurrentData(this.nowPage.value);
 
   }
@@ -65,7 +64,6 @@ export class PaginationBase {
   }
 
   setStartPage(last: number, pageCount: number): number {
-    console.log(last, pageCount);
     return last - (pageCount - 1);
   }
 

@@ -1,4 +1,4 @@
-import {CommonModule} from "@angular/common";
+import {CommonModule, formatNumber} from "@angular/common";
 import {
   AfterContentChecked,
   AfterContentInit, AfterViewChecked, AfterViewInit,
@@ -13,7 +13,7 @@ import {
   SimpleChanges
 } from "@angular/core";
 import {PaginationBase} from "./pagination-base";
-import {BehaviorSubject} from "rxjs";
+import {BehaviorSubject, Observable} from "rxjs";
 
 @Component({
   selector: 'app-paging',
@@ -35,7 +35,7 @@ import {BehaviorSubject} from "rxjs";
   `,
   styleUrls: ['./pagination.scss']
 })
-export class PaginationComponent implements OnInit, AfterViewInit, OnChanges {
+export class PaginationComponent implements OnInit, AfterViewInit {
   range!: number[];
   @Input() nowPage!: BehaviorSubject<number>;
   @Input() pageCount!: number;
@@ -44,12 +44,14 @@ export class PaginationComponent implements OnInit, AfterViewInit, OnChanges {
   @Input() totalPage!: number;
   @Input() pageGroup!: BehaviorSubject<number>;
 
+  pageObserver!: Observable<number>;
   liClass!: NodeListOf<Element>;
 
-  activeElement!: Element;
   _pageGroup!: number;
+  prePage!: Element;
 
   @Output('dataChange') dataChange = new EventEmitter<any>();
+
   constructor(private _page: PaginationBase) {
   }
 
@@ -59,73 +61,92 @@ export class PaginationComponent implements OnInit, AfterViewInit, OnChanges {
 
   ngOnInit() {
     this.setRange();
+    this.back();
   }
 
-  ngOnChanges(changes: SimpleChanges) {
-    console.log(changes);
-  }
 
   setRange() {
     const {startPage, endPage} = this;
 
     const arrayNum = Math.ceil(this.totalPage / this.pageCount) === this.pageGroup.value ?
-                        endPage.value - startPage.value + 1: this.pageCount;
+      endPage.value - startPage.value + 1 : this.pageCount;
     // @ts-ignore
     this.range = Array(arrayNum).fill().map((v, i) => {
       if (startPage.value < endPage.value) {
         return startPage.value + i
       }
     });
-    console.log(this.range);
-    //this.movePage(this.endPage + 1);
   }
 
   movePage(num: number) {
-    if(this.nowPage.value === num) {
+    if (this.nowPage.value === num) {
       return;
     }
     const {_page} = this;
     const urlParams = new URLSearchParams(window.location.search);
     const {location} = window;
-    urlParams.set('page', ''+num);
+    urlParams.set('page', '' + num);
     const newParam = urlParams.toString();
+    const isSameGroup = this._pageGroup === this.pageGroup.value;
 
     const _url = location.origin + location.pathname + '?' + newParam;
     // @ts-ignore
     history.pushState(null, null, _url);
 
     _page.setCurrentData(num);
-    this.setActiveButton(num);
     _page.setPaging();
 
-    if(this._pageGroup && this._pageGroup !== this.pageGroup.value) {
+    if (this._pageGroup || !isSameGroup) {
       this.setRange();
     }
 
     this._pageGroup = this.pageGroup.value;
-
-  }
-
-  setActiveButton(page?: number) {
-    if(!this.liClass) {
-      this.liClass = document.querySelectorAll('[class*="page-"]');
-    }
-    if(this.activeElement) {
-      this.activeElement.classList.remove('_active');
-    }
-
-    page = (page) ? page : this.nowPage.value;
-
-
-    this.liClass.forEach(node => {
-      // @ts-ignore
-      if(node.textContent == page) {
-        this.activeElement = node;
-        this.activeElement.classList.add('_active');
-      }
+    setTimeout(() => {
+      this.setActiveButton(num);
+    })
+    this.promise(num).then(data => {
+      this.setActiveButton(data as any);
     })
   }
 
+  setActiveButton(page?: number) {
+    let {prePage} = this;
+
+    if (!page) {
+      page = this.nowPage.value;
+    }
+    if (prePage) {
+      prePage.classList.remove('_active');
+    }
+
+    const currentPage = document.querySelector(`.page-${page}`);
+
+    if (!currentPage) {
+      return;
+    }
+
+    currentPage.classList.add('_active');
+    this.prePage = currentPage;
+  }
+
+  private promise(num: number) {
+    return new Promise((resolve) => {
+      resolve(num);
+    });
+  }
+
+  private back() {
+    window.addEventListener('popstate', (event) => {
+      const {currentTarget} = event as any;
+      const {search} = currentTarget['location'];
+      let page = search.match(/(?<=page=)\w+/g);
+
+      if(!page) {
+        page = 1;
+      }
+      this.movePage(page);
+    });
+  }
 }
 
 
