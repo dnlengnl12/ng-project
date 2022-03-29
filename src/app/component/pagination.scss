@@ -1,5 +1,5 @@
 @use '../../app';
-ul {
+.page-nav {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -12,6 +12,15 @@ ul {
     min-height: 40px;
     border: 1px solid app.$text;
     cursor: pointer;
+
+    a {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-width: inherit;
+      min-height: inherit;
+      color: black;
+    }
   }
 
   li._active {

@@ -1,33 +1,44 @@
 import {
-  Component,
   Directive,
-  ElementRef,
-  EventEmitter,
-  Input,
-  NgModule,
+  Injector,
   OnInit,
-  Output,
-  ViewChild
 } from "@angular/core";
 import {ActivatedRoute} from "@angular/router";
 import {BehaviorSubject} from "rxjs";
 
 @Directive()
-export class PaginationBase {
+export class PaginationBase implements OnInit {
   listData!: [];
   currentData = new BehaviorSubject<any>(null);
+  totalData!: number;
 
   range!: number[];
-  nowPage = new BehaviorSubject<number>(0);
+  nowPage!: number;
   dataPerPage!: number;
   totalPage!: number;
-  startPage = new BehaviorSubject<number>(0);
-  endPage = new BehaviorSubject<number>(0);
-  pageCount = 3;
-  pageGroup = new BehaviorSubject<number>(0);
+  startPage!: number;
+  endPage!: number;
+  pageCount = 10;
+  pageGroup!: number;
 
 
-  constructor() {
+  protected _route!: ActivatedRoute;
+
+  constructor(
+    protected _injector: Injector
+  ) {
+  }
+
+  ngOnInit() {
+    this._route = this._injector.get(ActivatedRoute);
+
+    this._route.data.subscribe(data => {
+      const {listData} = data;
+      this.totalData = listData.pop();
+      this.listData = listData;
+      this.setPaging();
+      this.setRange();
+    });
   }
 
   setPaging() {
@@ -35,31 +46,28 @@ export class PaginationBase {
     const _page = urlParams.get('page');
     const _limit = urlParams.get('limit');
 
-    this.dataPerPage = _limit ? +_limit : 3;
+    this.dataPerPage = _limit ? +_limit : 10;
 
-    this.totalPage = this.setLastPage(this.listData.length, this.dataPerPage);
+    this.totalPage = this.setLastPage(this.totalData, this.dataPerPage);
 
-    this.nowPage.next(_page ?
+    this.nowPage = (_page ?
       +_page > this.totalPage ?
         this.totalPage : +_page : 1);
-    if(this.totalPage < this.pageCount) {
+    if (this.totalPage < this.pageCount) {
       this.pageCount = this.totalPage;
     }
 
 
-    this.pageGroup.next(Math.ceil(this.nowPage.value / this.pageCount));
-    this.endPage.next(this.setEndPage(this.pageGroup.value, this.pageCount));
-    this.startPage.next(this.setStartPage(this.endPage.value, this.pageCount));
+    this.pageGroup = Math.ceil(this.nowPage / this.pageCount);
+    this.endPage = this.setEndPage(this.pageGroup, this.pageCount);
+    this.startPage = this.setStartPage(this.endPage, this.pageCount);
 
-    if(this.endPage.value > this.totalPage) {
-      this.endPage.next(this.totalPage);
+    if (this.endPage > this.totalPage) {
+      this.endPage = this.totalPage;
     }
-
-    this.setCurrentData(this.nowPage.value);
-
   }
 
-  setLastPage(totalData:number, limit: number): number {
+  setLastPage(totalData: number, limit: number): number {
     return Math.ceil(totalData / limit);
   }
 
@@ -71,21 +79,34 @@ export class PaginationBase {
     return group * limit;
   }
 
-  setCurrentData(page?: number) {
-    const {listData, dataPerPage} = this;
-    if(listData.length < 1) {
+  setCurrentData(data: [], page?: number) {
+    const {dataPerPage} = this;
+    if (data.length < 1) {
       return;
     }
 
-    if(!page) {
-      page = this.nowPage.value;
+    if (!page) {
+      page = this.nowPage;
     }
 
     const min = dataPerPage * (page - 1);
     const max = dataPerPage * (page);
 
-    this.currentData.next(listData.filter((data, index) =>
-        index >= min && index < max)
-    );
+    return data.filter((data: {}, index: number) =>
+      index >= min && index < max)
+  }
+
+  setRange() {
+    const {startPage, endPage} = this;
+
+    const arrayNum = Math.ceil(this.totalPage / this.pageCount) === this.pageGroup ?
+      endPage - startPage + 1 : this.pageCount;
+    // @ts-ignore
+    this.range = Array(arrayNum).fill().map((v, i) => {
+      if (startPage < endPage) {
+        return startPage + i
+      }
+    });
+    console.log(this.range);
   }
 }

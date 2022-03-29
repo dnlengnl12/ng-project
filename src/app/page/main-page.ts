@@ -4,14 +4,11 @@ import {MainService} from "../service/main.service";
 import {ListModule} from "../component/list";
 import {BehaviorSubject, Observable} from "rxjs";
 import {CommonModule} from "@angular/common";
-import {DialogFormModule} from "../component/dialog-form";
-import {DialogService} from "../service/dialog.service";
-import {DataType} from "../input-form/data1";
 import {ListResolve} from "../resolve/list-resolve.resolver";
 
 @Component({
   template: `
-    <app-list [columns]="columns" [controls]="true" [paging]="true"></app-list>
+    <app-list [columns]="columns" [controls]="true"></app-list>
   `,
   encapsulation: ViewEncapsulation.None,
   changeDetection: ChangeDetectionStrategy.OnPush

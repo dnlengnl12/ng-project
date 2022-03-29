@@ -7,6 +7,8 @@ import {DataService} from "../assets/data/data";
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import {DialogFormComponent} from "./component/dialog-form";
 import {DialogService} from "./service/dialog.service";
+import {ReactiveFormsModule} from "@angular/forms";
+
 
 @Component({
   selector: 'app-root',
@@ -40,7 +42,8 @@ export class AppComponent {
         loadChildren: () => import('./page/app-shell').then(m => m.AppShellModule)
       }
     ]),
-    BrowserAnimationsModule
+    BrowserAnimationsModule,
+    ReactiveFormsModule
   ],
   providers: [],
   bootstrap: [AppComponent]

@@ -3,7 +3,7 @@ import {Component, Directive, Inject, Input, NgModule, OnInit} from "@angular/co
 import {DialogService} from "../service/dialog.service";
 import {MAT_DIALOG_DATA, MatDialog, MatDialogModule, MatDialogRef} from "@angular/material/dialog";
 import {MatNativeDateModule} from "@angular/material/core";
-import {FormControl, FormGroup, FormsModule, ReactiveFormsModule} from "@angular/forms";
+import {FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule} from "@angular/forms";
 import {MatFormFieldModule} from "@angular/material/form-field";
 import {MatInputModule} from "@angular/material/input";
 import {MatRadioModule} from '@angular/material/radio';
@@ -27,7 +27,11 @@ import {MatCheckboxModule} from "@angular/material/checkbox";
               aria-labelledby="example-radio-group-label"
               class="example-radio-group"
             >
-              <mat-radio-button class="example-radio-button" *ngFor="let value of data[key].values" [value]="value">
+              <mat-radio-button
+                class="example-radio-button"
+                *ngFor="let value of data[key].values"
+                [value]="value"
+              >
                 {{value}}
               </mat-radio-button>
             </mat-radio-group>
@@ -64,13 +68,17 @@ export class DialogFormComponent implements OnInit {
   data!: any;
   dialogForm!: FormGroup;
   formInit!: FormControl;
+  targetData!: any;
 
   constructor(
     private _dialogService: DialogService,
     private _dialog: MatDialog,
     private _dialogRef: MatDialogRef<DialogFormComponent>,
-    @Inject(MAT_DIALOG_DATA) data: any
+    private _fb: FormBuilder,
+    @Inject(MAT_DIALOG_DATA) _data: any
   ) {
+    this.targetData = _data;
+    console.log(this.targetData);
   }
 
   ngOnInit() {
@@ -79,17 +87,16 @@ export class DialogFormComponent implements OnInit {
 
   setForm() {
     this.data = this._dialogService.setForm().data;
-    const {data} = this;
+    const {data, _fb} = this;
     const keys = Object.keys(data);
-
     if (keys.length < 1) {
       return;
     }
 
     this.formInit = new FormControl('');
-    this.dialogForm = new FormGroup(
+    this.dialogForm = _fb.group(
       keys.reduce((acc: any, key: any) => {
-        acc[key] = this.formInit;
+        acc[key] = this.targetData ? [this.targetData[key]] : [''];
         return acc;
       }, {})
     );

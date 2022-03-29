@@ -30,9 +30,9 @@ export class MainService implements OnInit {
   get(startIndex?:number, pageSize?:number): Observable<any> {
     const _url = startIndex ? `${this.apiUrl}?page=${startIndex}&size=${pageSize}` : this.apiUrl;
 
-    return this.http.get(_url)
-      .pipe(
-        tap(_ => console.log('fetched'))
-      )
+    this.http.get(_url).subscribe(data => {
+      console.log(data);
+    })
+    return this.http.get(_url);
   }
 }

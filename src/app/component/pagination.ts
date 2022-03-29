@@ -14,28 +14,32 @@ import {
 } from "@angular/core";
 import {PaginationBase} from "./pagination-base";
 import {BehaviorSubject, Observable} from "rxjs";
+import {Location} from "@angular/common";
+import {Router, RouterModule} from "@angular/router";
 
 @Component({
   selector: 'app-paging',
   template: `
     <ul>
       <ng-container *ngIf="pageGroup.value > 1">
-        <li (click)="movePage(startPage.value - 1)">이전</li>
+        <li>
+          <a [routerLink]="''" [queryParams]="{page: startPage.value - 1}">이전</a>
+        </li>
       </ng-container>
       <li *ngFor="let _range of range;"
-          [className]="'page-'+_range"
-          [innerHTML]="_range"
-          (click)="movePage(_range)"
+          [class._active]="_range === nowPage.value"
       >
+        <a [routerLink]="''" [queryParams]="{page: _range}" [innerHTML]="_range"></a>
       </li>
       <ng-container *ngIf="endPage.value < totalPage">
-        <li (click)="movePage(endPage.value + 1)">다음</li>
+        <li>
+          <a [routerLink]="''" [queryParams]="{page: endPage.value + 1}" >다음</a></li>
       </ng-container>
     </ul>
   `,
   styleUrls: ['./pagination.scss']
 })
-export class PaginationComponent implements OnInit, AfterViewInit {
+export class PaginationComponent implements OnInit {
   range!: number[];
   @Input() nowPage!: BehaviorSubject<number>;
   @Input() pageCount!: number;
@@ -52,16 +56,21 @@ export class PaginationComponent implements OnInit, AfterViewInit {
 
   @Output('dataChange') dataChange = new EventEmitter<any>();
 
-  constructor(private _page: PaginationBase) {
+  constructor(private _page: PaginationBase, private router: Router) {
   }
 
-  ngAfterViewInit() {
-    this.setActiveButton();
-  }
 
   ngOnInit() {
     this.setRange();
-    this.back();
+    //this.back();
+
+    this.router.navigate(
+      [],
+      {
+        queryParams: history.state,
+        queryParamsHandling: 'merge'
+      }
+    );
   }
 
 
@@ -91,8 +100,9 @@ export class PaginationComponent implements OnInit, AfterViewInit {
 
     const _url = location.origin + location.pathname + '?' + newParam;
     // @ts-ignore
-    history.pushState(null, null, _url);
+    history.pushState(_url, null, _url);
 
+    console.log(history);
     _page.setCurrentData(num);
     _page.setPaging();
 
@@ -101,51 +111,22 @@ export class PaginationComponent implements OnInit, AfterViewInit {
     }
 
     this._pageGroup = this.pageGroup.value;
-    setTimeout(() => {
-      this.setActiveButton(num);
-    })
-    this.promise(num).then(data => {
-      this.setActiveButton(data as any);
-    })
   }
 
-  setActiveButton(page?: number) {
-    let {prePage} = this;
 
-    if (!page) {
-      page = this.nowPage.value;
-    }
-    if (prePage) {
-      prePage.classList.remove('_active');
-    }
-
-    const currentPage = document.querySelector(`.page-${page}`);
-
-    if (!currentPage) {
-      return;
-    }
-
-    currentPage.classList.add('_active');
-    this.prePage = currentPage;
-  }
-
-  private promise(num: number) {
-    return new Promise((resolve) => {
-      resolve(num);
-    });
-  }
 
   private back() {
-    window.addEventListener('popstate', (event) => {
-      const {currentTarget} = event as any;
-      const {search} = currentTarget['location'];
-      let page = search.match(/(?<=page=)\w+/g);
-
-      if(!page) {
-        page = 1;
-      }
-      this.movePage(page);
-    });
+      history.back();
+      // const {currentTarget} = event as any;
+      // const {search} = currentTarget['location'];
+      // let page = search.match(/(?<=page=)\w+/g);
+      //
+      // if(!page) {
+      //   page = 1;
+      // }
+      //
+      // history.back();
+      // this.movePage(page);
   }
 }
 
@@ -153,7 +134,8 @@ export class PaginationComponent implements OnInit, AfterViewInit {
 @NgModule({
   declarations: [PaginationComponent],
   imports: [
-    CommonModule
+    CommonModule,
+    RouterModule
   ],
   exports: [PaginationComponent]
 })

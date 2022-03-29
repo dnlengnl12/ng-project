@@ -1,12 +1,9 @@
 import {
-  AfterContentInit,
   ChangeDetectionStrategy,
-  Component,
-  ContentChild,
-  Injector,
+  Component, Injector,
   Input,
-  NgModule, OnChanges,
-  OnInit, SimpleChanges,
+  NgModule,
+  OnInit,
   ViewEncapsulation
 } from "@angular/core";
 import {CommonModule} from "@angular/common";
@@ -15,11 +12,10 @@ import {DialogService} from "../service/dialog.service";
 import {DataType} from "../input-form/data1";
 import {MatListModule} from "@angular/material/list";
 import {MatTableModule} from "@angular/material/table";
-import {ActivatedRoute} from "@angular/router";
+import {ActivatedRoute, RouterModule} from "@angular/router";
 import {MatButtonModule} from "@angular/material/button";
-import {PaginationModule} from "./pagination";
 import {PaginationBase} from "./pagination-base";
-import {BehaviorSubject} from "rxjs";
+import {MainService} from "../service/main.service";
 
 @Component({
   selector: 'app-list',
@@ -37,13 +33,35 @@ import {BehaviorSubject} from "rxjs";
     </ng-template>
 
     <ng-template #_paging>
-      <app-paging [nowPage]="nowPage"
-                  [pageCount]="pageCount"
-                  [startPage]="startPage"
-                  [endPage]="endPage"
-                  [totalPage]="totalPage"
-                  [pageGroup]="pageGroup"
-      ></app-paging>
+      <ul class="page-nav">
+        <ng-container *ngIf="pageGroup > 1">
+          <li>
+            <a
+              [routerLink]="''"
+              [queryParams]="{page: startPage - 1}"
+              (click)="movePage(startPage - 1)"
+            >이전</a>
+          </li>
+        </ng-container>
+        <li *ngFor="let _range of range;"
+            [class._active]="_range === nowPage"
+        >
+          <a
+            [routerLink]="''"
+            [queryParams]="{page: _range}"
+            [innerHTML]="_range"
+            (click)="movePage(+_range)"
+          ></a>
+        </li>
+        <ng-container *ngIf="endPage < totalPage">
+          <li>
+            <a
+              [routerLink]="''"
+              [queryParams]="{page: endPage + 1}"
+              (click)="movePage(endPage+1)"
+            >다음</a></li>
+        </ng-container>
+      </ul>
     </ng-template>
 
     <ng-template #_listTable>
@@ -63,13 +81,6 @@ import {BehaviorSubject} from "rxjs";
         </ng-container>
         <tr mat-header-row *matHeaderRowDef="columns"></tr>
         <tr mat-row *matRowDef="let row; columns: columns;"></tr>
-        <!--      <ng-container *ngIf="controls then _controls"></ng-container>-->
-        <!--      <ng-template #_controls>-->
-        <!--        <tr mat-header-row></tr>-->
-        <!--        <tr mat-row *matRowDef="let row;">-->
-        <!--          <ng-container *ngTemplateOutlet="_update; context: {value: row}"></ng-container>-->
-        <!--        </tr>-->
-        <!--      </ng-template>-->
       </table>
     </ng-template>
 
@@ -77,12 +88,10 @@ import {BehaviorSubject} from "rxjs";
       <h1 [innerHTML]="title"></h1>
     </div>
     <div class="list-main">
-      <ng-container *ngIf="listData.value.length > 0; then _listTable else empty"></ng-container>
+      <ng-container *ngIf="totalData > 0; then _listTable else empty"></ng-container>
     </div>
     <div class="list-footer">
-      <ng-container *ngIf="paging">
-        <ng-container *ngTemplateOutlet="_paging"></ng-container>
-      </ng-container>
+      <ng-container *ngTemplateOutlet="_paging"></ng-container>
       <ng-container *ngTemplateOutlet="_create"></ng-container>
 
       {{nowPage | json}}
@@ -90,54 +99,27 @@ import {BehaviorSubject} from "rxjs";
   `,
   encapsulation: ViewEncapsulation.None,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  styleUrls: ['./list.scss'],
-  providers: [PaginationBase]
+  styleUrls: ['./list.scss', './pagination.scss']
 })
-export class ListComponent implements OnInit {
-  listData!: BehaviorSubject<any>;
-  pagedData!: [];
+export class ListComponent extends PaginationBase implements OnInit {
   @Input() title!: string;
   @Input() columns!: string[];
   @Input() controls!: boolean;
-  @Input() paging!: boolean;
-
-  nowPage!: BehaviorSubject<number>;
-  pageCount!: number;
-  startPage!: BehaviorSubject<number>;
-  endPage!: BehaviorSubject<number>;
-  totalPage!: number;
-  pageGroup!: BehaviorSubject<number>;
 
   constructor(
     private _dialog: DialogService,
     private _inputForm: DataType,
-    private _route: ActivatedRoute,
-    private _page: PaginationBase
+    private _service: MainService,
+    protected _injector: Injector
   ) {
+    super(_injector);
   }
 
   ngOnInit() {
+    super.ngOnInit();
 
-    if(this.controls) {
+    if (this.controls) {
       this.columns.push('controls');
-    }
-
-    if(this.paging) {
-      const {_page} = this;
-      this._page.listData = this._route.snapshot.data['listData'];
-      _page.setPaging();
-
-      this._page.setCurrentData();
-      this.listData = this._page.currentData;
-
-      // @ts-ignore
-
-      this.nowPage = _page.nowPage;
-      this.pageCount = _page.pageCount;
-      this.startPage = _page.startPage;
-      this.endPage = _page.endPage;
-      this.totalPage = _page.totalPage;
-      this.pageGroup = _page.pageGroup;
     }
   }
 
@@ -149,9 +131,33 @@ export class ListComponent implements OnInit {
     this._dialog.update({form: this._inputForm, target: data});
   }
 
-  getData(event?: any) {
-    this.pagedData = event;
+
+  movePage(num: number) {
+    // if (this.nowPage.value === num) {
+    //   return;
+    // }
+    // const {_page} = this;
+    // const urlParams = new URLSearchParams(window.location.search);
+    // const {location} = window;
+    // urlParams.set('page', '' + num);
+    // const newParam = urlParams.toString();
+    // const isSameGroup = this._pageGroup === this.pageGroup.value;
+    //
+    // const _url = location.origin + location.pathname + '?' + newParam;
+    // // @ts-ignore
+    // history.pushState(_url, null, _url);
+    //
+    // console.log(history);
+    // _page.setCurrentData(num);
+    // _page.setPaging();
+    //
+    // if (this._pageGroup || !isSameGroup) {
+    //   this.setRange();
+    // }
+    //
+    // this._pageGroup = this.pageGroup;
   }
+
 
 }
 
@@ -164,7 +170,7 @@ export class ListComponent implements OnInit {
     MatListModule,
     MatTableModule,
     MatButtonModule,
-    PaginationModule
+    RouterModule
   ],
   exports: [ListComponent],
   providers: [
