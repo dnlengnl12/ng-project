@@ -32,36 +32,39 @@ export class DialogService implements OnInit {
            form = null,
            component = DialogFormComponent,
            target = null,
-           onSubmit = null
+           onSubmit = null,
+           serviceName = ''
          }: {
     form: any | null,
     component?: any | null,
     target?: any | null,
-    onSubmit?: Function | null
+    onSubmit?: Function | null,
+    serviceName?: string
   }) {
     if(!this.form) {
       this.form = form;
     }
-
-    return this.open({component, target, onSubmit});
+    return this.open({component, target, onSubmit, serviceName});
   }
 
   update({
            form = null,
            component = DialogFormComponent,
            target = null,
-           onSubmit = null
+           onSubmit = null,
+    serviceName = ''
          }: {
     form: any | null,
     component?: any | null,
     target?: any | null,
-    onSubmit?: Function | null
+    onSubmit?: Function | null,
+    serviceName?: string
   }) {
     if(!this.form) {
       this.form = form;
     }
 
-    return this.open({component, target, onSubmit});
+    return this.open({component, target, onSubmit, serviceName});
   }
 
   delete() {
@@ -80,16 +83,22 @@ export class DialogService implements OnInit {
   open({
          component = DialogFormComponent,
          target = null,
-         onSubmit = null
+         onSubmit = null,
+         serviceName = ''
        }: {
     component?: any | null,
     target?: any | null,
-    onSubmit?: Function | null
+    onSubmit?: Function | null,
+    serviceName?: string
   }) {
+    const _data = {
+      target,
+      serviceName
+    }
     return this._dialog.open(
       component,
       {
-        data: target /*?
+        data: _data /*?
           {
             form,
             onSubmit

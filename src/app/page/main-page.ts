@@ -8,7 +8,7 @@ import {ListResolve} from "../resolve/list-resolve.resolver";
 
 @Component({
   template: `
-    <app-list [columns]="columns" [controls]="true"></app-list>
+    <app-list [columns]="columns" [controls]="true" [serviceName]="'formService'"></app-list>
   `,
   encapsulation: ViewEncapsulation.None,
   changeDetection: ChangeDetectionStrategy.OnPush

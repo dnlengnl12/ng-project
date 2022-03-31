@@ -15,7 +15,6 @@ import {MatTableModule} from "@angular/material/table";
 import {ActivatedRoute, RouterModule} from "@angular/router";
 import {MatButtonModule} from "@angular/material/button";
 import {PaginationBase} from "./pagination-base";
-import {MainService} from "../service/main.service";
 
 @Component({
   selector: 'app-list',
@@ -105,11 +104,11 @@ export class ListComponent extends PaginationBase implements OnInit {
   @Input() title!: string;
   @Input() columns!: string[];
   @Input() controls!: boolean;
+  @Input() serviceName!: string;
 
   constructor(
     private _dialog: DialogService,
     private _inputForm: DataType,
-    private _service: MainService,
     protected _injector: Injector
   ) {
     super(_injector);
@@ -124,11 +123,11 @@ export class ListComponent extends PaginationBase implements OnInit {
   }
 
   create() {
-    this._dialog.create({form: this._inputForm});
+    this._dialog.create({form: this._inputForm, serviceName: this.serviceName});
   }
 
   update(data: object) {
-    this._dialog.update({form: this._inputForm, target: data});
+    this._dialog.update({form: this._inputForm, target: data, serviceName: this.serviceName});
   }
 
 

@@ -8,22 +8,57 @@ import {CommonModule} from "@angular/common";
 @Component({
   selector: 'app-dynamic-form',
   template: `
+<!--    <div>-->
+<!--      <form (ngSubmit)="onSubmit()" [formGroup]="form">-->
+<!--        <div *ngFor="let question of questions" class="form-row">-->
+<!--          <app-question [question]="question" [form]="form"></app-question>-->
+<!--          <ng-container [ngSwitch]="data[key].inputType">-->
+<!--            <ng-template ngSwitchCase="text">-->
+<!--              <mat-form-field appearance="outline">-->
+<!--                <mat-label *ngIf="data[key].label">{{data[key].label}}</mat-label>-->
+<!--                <input matInput placeholder="{{key}}" formControlName="{{key}}">-->
+<!--              </mat-form-field>-->
+<!--            </ng-template>-->
+<!--            <ng-template ngSwitchCase="radio">-->
+<!--              <mat-radio-group-->
+<!--                aria-labelledby="example-radio-group-label"-->
+<!--                class="example-radio-group"-->
+<!--              >-->
+<!--                <mat-radio-button-->
+<!--                  class="example-radio-button"-->
+<!--                  *ngFor="let value of data[key].values"-->
+<!--                  [value]="value"-->
+<!--                >-->
+<!--                  {{value}}-->
+<!--                </mat-radio-button>-->
+<!--              </mat-radio-group>-->
+<!--            </ng-template>-->
+<!--            <ng-template ngSwitchCase="checkbox">-->
+<!--              <mat-checkbox>-->
+
+<!--              </mat-checkbox>-->
+<!--            </ng-template>-->
+<!--          </ng-container>-->
+<!--        </div>-->
+<!--      </form>-->
+<!--    </div>-->
+
     <div>
-        <form (ngSubmit)="onSubmit()" [formGroup]="form">
-          <div *ngFor="let question of questions" class="form-row">
-            <app-question [question]="question" [form]="form"></app-question>
-          </div>
+      <form (ngSubmit)="onSubmit()" [formGroup]="form">
+        <div *ngFor="let question of questions" class="form-row">
+          <app-question [question]="question" [form]="form"></app-question>
+        </div>
 
-          <div class="form-row">
-            <button type="submit" [disabled]="!form.valid">Save</button>
-          </div>
+        <div class="form-row">
+          <button type="submit" [disabled]="!form.valid">Save</button>
+        </div>
 
-          <div *ngIf="payLoad" class="form-row">
-            <strong>Saved the following values</strong>
-            <br>{{payLoad}}
-          </div>
+        <div *ngIf="payLoad" class="form-row">
+          <strong>Saved the following values</strong>
+          <br>{{payLoad}}
+        </div>
 
-        </form>
+      </form>
 
     </div>
   `,

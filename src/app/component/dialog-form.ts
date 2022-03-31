@@ -1,5 +1,5 @@
 import {CommonModule} from '@angular/common';
-import {Component, Directive, Inject, Input, NgModule, OnInit} from "@angular/core";
+import {Component, Directive, Inject, Injector, Input, NgModule, OnInit} from "@angular/core";
 import {DialogService} from "../service/dialog.service";
 import {MAT_DIALOG_DATA, MatDialog, MatDialogModule, MatDialogRef} from "@angular/material/dialog";
 import {MatNativeDateModule} from "@angular/material/core";
@@ -9,41 +9,50 @@ import {MatInputModule} from "@angular/material/input";
 import {MatRadioModule} from '@angular/material/radio';
 import {KeyObject} from "../pipe/object-pipe";
 import {MatCheckboxModule} from "@angular/material/checkbox";
+import {DynamicFormModule} from "./dynamic-form";
+import {FormService} from "../service/form.service";
+import {Observable} from "rxjs";
+import {FormBase} from "./form-base";
+import {GetService, dialogFormService} from "../service/dialog-form.service";
 
 @Component({
   selector: 'app-dialog-form',
   template: `
-    <form [formGroup]="dialogForm">
-      <ng-container *ngFor="let key of data | keys">
-        <ng-container [ngSwitch]="data[key].inputType">
-          <ng-template ngSwitchCase="text">
-            <mat-form-field appearance="outline">
-              <mat-label *ngIf="data[key].label">{{data[key].label}}</mat-label>
-              <input matInput placeholder="{{key}}" formControlName="{{key}}">
-            </mat-form-field>
-          </ng-template>
-          <ng-template ngSwitchCase="radio">
-            <mat-radio-group
-              aria-labelledby="example-radio-group-label"
-              class="example-radio-group"
-            >
-              <mat-radio-button
-                class="example-radio-button"
-                *ngFor="let value of data[key].values"
-                [value]="value"
-              >
-                {{value}}
-              </mat-radio-button>
-            </mat-radio-group>
-          </ng-template>
-          <ng-template ngSwitchCase="checkbox">
-            <mat-checkbox>
+    <div>
+      <h2>Title</h2>
+      <app-dynamic-form [questions]="questions$ | async"></app-dynamic-form>
+    </div>
+<!--    <form [formGroup]="dialogForm">-->
+<!--      <ng-container *ngFor="let key of data | keys">-->
+<!--        <ng-container [ngSwitch]="data[key].inputType">-->
+<!--          <ng-template ngSwitchCase="text">-->
+<!--            <mat-form-field appearance="outline">-->
+<!--              <mat-label *ngIf="data[key].label">{{data[key].label}}</mat-label>-->
+<!--              <input matInput placeholder="{{key}}" formControlName="{{key}}">-->
+<!--            </mat-form-field>-->
+<!--          </ng-template>-->
+<!--          <ng-template ngSwitchCase="radio">-->
+<!--            <mat-radio-group-->
+<!--              aria-labelledby="example-radio-group-label"-->
+<!--              class="example-radio-group"-->
+<!--            >-->
+<!--              <mat-radio-button-->
+<!--                class="example-radio-button"-->
+<!--                *ngFor="let value of data[key].values"-->
+<!--                [value]="value"-->
+<!--              >-->
+<!--                {{value}}-->
+<!--              </mat-radio-button>-->
+<!--            </mat-radio-group>-->
+<!--          </ng-template>-->
+<!--          <ng-template ngSwitchCase="checkbox">-->
+<!--            <mat-checkbox>-->
 
-            </mat-checkbox>
-          </ng-template>
-        </ng-container>
-      </ng-container>
-    </form>
+<!--            </mat-checkbox>-->
+<!--          </ng-template>-->
+<!--        </ng-container>-->
+<!--      </ng-container>-->
+<!--    </form>-->
     <!--    <form [formGroup]="dialogForm">-->
     <!--      <mat-form-field appearance="outline">-->
     <!--        <input matInput placeholder="id" formControlName="id" [(ngModel)]="data.id">-->
@@ -69,7 +78,9 @@ export class DialogFormComponent implements OnInit {
   dialogForm!: FormGroup;
   formInit!: FormControl;
   targetData!: any;
+  questions$!: Observable<FormBase<any>[]>;
 
+  _service!: any;
   constructor(
     private _dialogService: DialogService,
     private _dialog: MatDialog,
@@ -77,8 +88,9 @@ export class DialogFormComponent implements OnInit {
     private _fb: FormBuilder,
     @Inject(MAT_DIALOG_DATA) _data: any
   ) {
-    this.targetData = _data;
-    console.log(this.targetData);
+    this.targetData = _data.data;
+    const _getService = (new GetService(_data.serviceName)).getClass();
+    this.questions$ = _getService.getQuestions();
   }
 
   ngOnInit() {
@@ -105,6 +117,13 @@ export class DialogFormComponent implements OnInit {
   close() {
     this._dialogRef.close();
   }
+
+
+
+  setService(name: string) {
+    this._service = name;
+
+  }
 }
 
 
@@ -119,7 +138,8 @@ export class DialogFormComponent implements OnInit {
     MatInputModule,
     MatRadioModule,
     CommonModule,
-    MatCheckboxModule
+    MatCheckboxModule,
+    DynamicFormModule
   ],
   exports: [
     DialogFormComponent,
