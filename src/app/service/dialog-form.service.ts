@@ -1,18 +1,15 @@
 import {FormService} from "./form.service";
-import {Directive, OnInit} from "@angular/core";
+import {Directive} from "@angular/core";
 
 export const dialogFormService = {
  formService: FormService
 } as any;
 
 @Directive()
-export class GetService implements OnInit {
+export class GetService {
   name = '';
   constructor(name: string) {
     this.name = name;
-  }
-
-  ngOnInit() {
   }
 
   getClass() {

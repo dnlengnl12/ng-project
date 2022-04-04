@@ -66,6 +66,7 @@ import {CommonModule} from "@angular/common";
 })
 export class DynamicFormComponent implements OnInit {
   @Input() questions: FormBase<string>[] | null = [];
+  @Input() data!: {} | null;
   form!: FormGroup;
   payLoad = '';
 
@@ -74,6 +75,7 @@ export class DynamicFormComponent implements OnInit {
 
   ngOnInit() {
     this.form = this.fcs.toFormGroup(this.questions as FormBase<string>[]);
+    console.log(this.data);
   }
 
   onSubmit() {

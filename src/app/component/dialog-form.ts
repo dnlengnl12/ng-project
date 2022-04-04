@@ -20,7 +20,10 @@ import {GetService, dialogFormService} from "../service/dialog-form.service";
   template: `
     <div>
       <h2>Title</h2>
-      <app-dynamic-form [questions]="questions$ | async"></app-dynamic-form>
+      <app-dynamic-form
+        [questions]="questions$ | async"
+        [data]="targetData ? targetData : null"
+      ></app-dynamic-form>
     </div>
 <!--    <form [formGroup]="dialogForm">-->
 <!--      <ng-container *ngFor="let key of data | keys">-->
@@ -70,17 +73,13 @@ import {GetService, dialogFormService} from "../service/dialog-form.service";
     <!--    </form>-->
   `
 })
-export class DialogFormComponent implements OnInit {
+export class DialogFormComponent {
   titles!: string[];
-  feature!: string;
 
   data!: any;
-  dialogForm!: FormGroup;
-  formInit!: FormControl;
-  targetData!: any;
+  targetData!: {} | null;
   questions$!: Observable<FormBase<any>[]>;
 
-  _service!: any;
   constructor(
     private _dialogService: DialogService,
     private _dialog: MatDialog,
@@ -88,41 +87,13 @@ export class DialogFormComponent implements OnInit {
     private _fb: FormBuilder,
     @Inject(MAT_DIALOG_DATA) _data: any
   ) {
-    this.targetData = _data.data;
+    this.targetData = _data.target;
     const _getService = (new GetService(_data.serviceName)).getClass();
     this.questions$ = _getService.getQuestions();
   }
 
-  ngOnInit() {
-    this.setForm();
-  }
-
-  setForm() {
-    this.data = this._dialogService.setForm().data;
-    const {data, _fb} = this;
-    const keys = Object.keys(data);
-    if (keys.length < 1) {
-      return;
-    }
-
-    this.formInit = new FormControl('');
-    this.dialogForm = _fb.group(
-      keys.reduce((acc: any, key: any) => {
-        acc[key] = this.targetData ? [this.targetData[key]] : [''];
-        return acc;
-      }, {})
-    );
-  }
-
   close() {
     this._dialogRef.close();
-  }
-
-
-
-  setService(name: string) {
-    this._service = name;
-
   }
 }
 

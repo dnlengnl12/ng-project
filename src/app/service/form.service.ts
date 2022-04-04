@@ -3,6 +3,7 @@ import {FormBase} from "../component/form-base";
 import {FormTextbox} from "../component/form-textbox";
 import {FormDropdown} from "../component/form-dropdown";
 import {of} from "rxjs";
+import {FormRadio} from "../component/form-radio";
 
 @Injectable({
   providedIn: 'root'
@@ -15,7 +16,7 @@ export class FormService {
         label: 'name',
         order: 1
       }),
-      new FormDropdown({
+      new FormRadio({
         key: 'approval',
         label: 'approval',
         type: 'radio',

@@ -5,6 +5,7 @@ import {CommonModule} from "@angular/common";
 import {MatFormFieldModule} from "@angular/material/form-field";
 import {MatInputModule} from "@angular/material/input";
 import {MatSelectModule} from "@angular/material/select";
+import {MatRadioModule} from "@angular/material/radio";
 
 @Component({
   selector: 'app-question',
@@ -27,9 +28,18 @@ import {MatSelectModule} from "@angular/material/select";
               [id]="question.key">
               <mat-label *ngIf="question.label">{{question.label}}</mat-label>
               <mat-select [id]="question.key" [formControlName]="question.key">
-                <mat-option *ngFor="let opt of question.options" value="opt.key">{{opt.value}}</mat-option>
+                <mat-option *ngFor="let opt of question.options" [value]="opt.key">{{opt.value}}</mat-option>
               </mat-select>
             </mat-form-field>
+        </ng-template>
+
+        <ng-template ngSwitchCase="radio">
+          <mat-radio-group
+          aria-labelledby="question.label">
+            <mat-radio-button
+                *ngFor="let opt of question.options" [value]="opt.value"
+            >{{opt.key}}</mat-radio-button>
+          </mat-radio-group>
         </ng-template>
       </div>
     </div>
@@ -48,7 +58,7 @@ export class DynamicFormQuestionComponent {
 
 @NgModule({
   declarations: [DynamicFormQuestionComponent],
-  imports: [FormsModule, ReactiveFormsModule, CommonModule, MatFormFieldModule, MatInputModule, MatSelectModule],
+  imports: [FormsModule, ReactiveFormsModule, CommonModule, MatFormFieldModule, MatInputModule, MatSelectModule, MatRadioModule],
   exports: [DynamicFormQuestionComponent]
 })
 export class DynamicFormQuestionModule {}
