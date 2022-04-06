@@ -22,7 +22,7 @@ import {GetService, dialogFormService} from "../service/dialog-form.service";
       <h2>Title</h2>
       <app-dynamic-form
         [questions]="questions$ | async"
-        [data]="targetData ? targetData : null"
+        [receive]="receive ? receive : null"
       ></app-dynamic-form>
     </div>
 <!--    <form [formGroup]="dialogForm">-->
@@ -77,7 +77,7 @@ export class DialogFormComponent {
   titles!: string[];
 
   data!: any;
-  targetData!: {} | null;
+  receive!: {} | null;
   questions$!: Observable<FormBase<any>[]>;
 
   constructor(
@@ -87,7 +87,7 @@ export class DialogFormComponent {
     private _fb: FormBuilder,
     @Inject(MAT_DIALOG_DATA) _data: any
   ) {
-    this.targetData = _data.target;
+    this.receive = _data.target;
     const _getService = (new GetService(_data.serviceName)).getClass();
     this.questions$ = _getService.getQuestions();
   }
