@@ -19,8 +19,7 @@ import {MatRadioModule} from "@angular/material/radio";
           >
             <mat-label *ngIf="question.label">{{question.label}}</mat-label>
             <input matInput placeholder="{{question.key}}"
-
-                    [value]="data"
+                    [formControlName]="question.key"
             >
           </mat-form-field>
         </ng-template>
@@ -39,7 +38,7 @@ import {MatRadioModule} from "@angular/material/radio";
         <ng-template ngSwitchCase="radio">
           <mat-radio-group
             aria-labelledby="question.label"
-            value="{{data}}"
+            [formControlName]="question.key"
           >
             <mat-radio-button
               *ngFor="let opt of question.options" [value]="opt.value"
@@ -52,21 +51,13 @@ import {MatRadioModule} from "@angular/material/radio";
     <div class="errorMessage" *ngIf="!isValid">{{question.label}} is required</div>
   `
 })
-export class DynamicFormQuestionComponent implements OnInit{
+export class DynamicFormQuestionComponent {
   @Input() question!: FormBase<string>;
   @Input() form!: FormGroup;
-  @Input() receive!: any;
 
   data = null;
   get isValid() {
     return this.form.controls[this.question.key].valid;
-  }
-
-  ngOnInit() {
-    if(this.receive) {
-      this.data = this.receive[this.question.key];
-      console.log(this.data);
-    }
   }
 
 }

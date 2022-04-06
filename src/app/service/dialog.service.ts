@@ -93,12 +93,14 @@ export class DialogService implements OnInit {
   }) {
     const _data = {
       target,
-      serviceName
+      serviceName,
+      onSubmit
     }
     return this._dialog.open(
       component,
       {
-        data: _data /*?
+        data: _data,
+        /*?
           {
             form,
             onSubmit

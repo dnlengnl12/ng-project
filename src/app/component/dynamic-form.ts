@@ -11,7 +11,7 @@ import {CommonModule} from "@angular/common";
     <div>
       <form (ngSubmit)="onSubmit()" [formGroup]="form">
         <div *ngFor="let question of questions" class="form-row">
-          <app-question [question]="question" [form]="form" [receive]="receive"></app-question>
+          <app-question [question]="question" [form]="form"></app-question>
         </div>
 
         <div class="form-row">
@@ -32,6 +32,7 @@ import {CommonModule} from "@angular/common";
 export class DynamicFormComponent implements OnInit {
   @Input() questions: FormBase<string>[] | null = [];
   @Input() receive!: {} | null;
+  @Input() submit!: any | null;
   form!: FormGroup;
   payLoad = '';
 
@@ -39,13 +40,22 @@ export class DynamicFormComponent implements OnInit {
   }
 
   ngOnInit() {
+    if(this.receive) {
+      this.questions?.forEach(question => {
+        // @ts-ignore
+        question.value = '' + this.receive[question.key];
+      })
+    }
     this.form = this.fcs.toFormGroup(this.questions as FormBase<string>[]);
-    console.log(this.questions);
-    console.log(this.receive);
+
+    if(this.submit) {
+      this.onSubmit = this.submit;
+    }
   }
 
   onSubmit() {
     this.payLoad = JSON.stringify(this.form.getRawValue());
+    console.log(this.form);
   }
 }
 
